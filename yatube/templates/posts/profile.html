@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% block title %}
+  Профайл пользователя {{ author.get_full_name }}
+{% endblock %}
+{% block content %}
+  <div class="container py-5">        
+    <h1>Все посты пользователя {{ author.get_full_name }} </h1>
+      <h3>Всего постов: {{ author.posts.count }} </h3>
+      {% if following %}
+        <a
+          class="btn btn-lg btn-danger btn-sm"
+          href="{% url 'posts:profile_unfollow' author.username %}" role="button">
+            Отписаться
+        </a>
+      {% else %}
+        <a
+          class="btn btn-lg btn-primary btn-sm"
+          href="{% url 'posts:profile_follow' author.username %}" role="button">
+            Подписаться
+        </a>
+      {% endif %}
+      <hr>
+      {% for post in page_obj %}   
+        <article>
+          <ul>
+            <li>
+              <a
+                class="btn btn-outline-dark btn-sm"
+                href="{% url 'posts:profile' post.author.username %}">
+                    Автор: {{ author.get_full_name }}
+              </a>
+            </li>
+            <li>
+              Дата публикации: {{ post.pub_date|date:"d E Y" }}
+            </li>
+          </ul>
+          {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+            <img class="card-img my-2" src="{{ im.url }}">
+          {% endthumbnail %}
+          <p>
+            {{ post.text }}
+          </p>
+          {% if post %}
+            <p>
+              <a
+                class="btn btn-info"
+                href="{% url 'posts:post_detail' post.pk %}">подробная информация
+              </a>
+            </p>
+          {% endif %}
+          {% if post.group %}       
+            <a
+              class="btn btn-secondary"
+              href="{% url 'posts:group_list' post.group.slug %}">все записи группы
+            </a>
+          {% endif %}
+          {% if not forloop.last %} <hr> {% endif %}
+        </article>
+      {% endfor %}
+  </div>
+{% include 'posts/includes/paginator.html' %}   
+{% endblock %}
