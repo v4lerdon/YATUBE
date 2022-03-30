@@ -227,20 +227,17 @@ class PostPagesTests(TestCase):
 
     def test_template_cache(self):
         """Проверка кэширования index."""
-        response_content = self.authorized_client.get(reverse(
-            'posts:index'
-        )
+        response_content = self.authorized_client.get(
+            reverse('posts:index')
         ).content
         self.post.delete()
-        response_del_content = self.authorized_client.get(reverse(
-            'posts:index'
-        )
+        response_del_content = self.authorized_client.get(
+            reverse('posts:index')
         ).content
         self.assertEqual(response_content, response_del_content)
         cache.clear()
-        response_true_del_content = self.authorized_client.get(reverse(
-            'posts:index'
-        )
+        response_true_del_content = self.authorized_client.get(
+            reverse('posts:index')
         ).content
         self.assertNotEqual(response_content, response_true_del_content)
 
@@ -344,12 +341,12 @@ class FollowViewsTests(TestCase):
         """Новая запись пользователя появляется в ленте тех,
         кто на него подписан и не появляется в ленте тех, кто не подписан."""
         Follow.objects.create(user=self.follower, author=self.following)
-        response_follower = self.autorized_client_follower.get(reverse(
-            'posts:follow_index')
+        response_follower = self.autorized_client_follower.get(
+            reverse('posts:follow_index')
         )
         text_sub = response_follower.context['page_obj'][0].text
         self.assertEqual(text_sub, self.post.text)
-        response_following = self.autorized_client_following.get(reverse(
-            'posts:follow_index')
+        response_following = self.autorized_client_following.get(
+            reverse('posts:follow_index')
         )
         self.assertNotContains(response_following, self.post.text)
