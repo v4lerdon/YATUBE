@@ -43,13 +43,10 @@ def profile(request, username):
     paginator = Paginator(posts, TOP_TEN)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            user=request.user,
-            author=author
-        ).exists()
-    else:
-        following = False
+    following = request.user.is_authenticated and Follow.objects.filter(
+        user=request.user,
+        author=author
+    ).exists()
     context = {
         'author': author,
         'posts': posts,
@@ -62,8 +59,8 @@ def profile(request, username):
 def post_detail(request, post_id):
     template = 'posts/post_detail.html'
     post = get_object_or_404(Post, pk=post_id)
-    form = CommentForm(request.POST or None)
-    comments = post.comments.all().order_by('-created')
+    form = CommentForm()
+    comments = post.comments.order_by('-created')
     context = {
         'post': post,
         'form': form,
@@ -146,17 +143,15 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    # Подписаться на автора
     author = get_object_or_404(User, username=username)
     follower = Follow.objects.filter(user=request.user, author=author)
-    if request.user != author and not follower:
+    if request.user != author and not follower.exists():
         Follow.objects.create(user=request.user, author=author)
     return redirect('posts:profile', username=author)
 
 
 @login_required
 def profile_unfollow(request, username):
-    # Отписаться от автора
     author = get_object_or_404(User, username=username)
     follower = Follow.objects.filter(user=request.user, author=author)
     if follower.exists():

@@ -262,7 +262,6 @@ class PaginatorViewsTest(TestCase):
                 group=cls.group
             )
             )
-        # Сохраняем список в БД
         Post.objects.bulk_create(cls.post)
 
     def setUp(self):
@@ -281,7 +280,7 @@ class PaginatorViewsTest(TestCase):
                 'posts:group_list',
             reverse(
                 'posts:profile',
-                kwargs={'username': 'user'}
+                kwargs={'username': self.user.username}
             ):
                 'posts:profile'
         }
@@ -299,7 +298,7 @@ class PaginatorViewsTest(TestCase):
             ) + '?page=2': 'posts:group_list',
             reverse(
                 'posts:profile',
-                kwargs={'username': 'user'}
+                kwargs={'username': self.user.username}
             ) + '?page=2': 'posts:profile'
         }
         for url in urls.keys():
@@ -308,22 +307,21 @@ class PaginatorViewsTest(TestCase):
 
 
 class FollowViewsTests(TestCase):
-    def setUp(self):
-        #  Подписчик
-        self.autorized_client_follower = Client()
-        # Автор
-        self.autorized_client_following = Client()
-        # Создание пользователей
-        self.follower = User.objects.create_user(username='follower')
-        self.following = User.objects.create_user(username='following')
-        # Аутентификация пользователей
-        self.autorized_client_follower.force_login(self.follower)
-        self.autorized_client_following.force_login(self.following)
-        # Создаем пост
-        self.post = Post.objects.create(
-            author=self.following,
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.follower = User.objects.create_user(username='follower')
+        cls.following = User.objects.create_user(username='following')
+        cls.post = Post.objects.create(
+            author=cls.following,
             text='Тестовая запись для ленты подписок'
         )
+
+    def setUp(self):
+        self.autorized_client_follower = Client()
+        self.autorized_client_following = Client()
+        self.autorized_client_follower.force_login(self.follower)
+        self.autorized_client_following.force_login(self.following)
 
     def test_follow_unfollow_auth(self):
         """Авторизованный пользователь может
@@ -347,13 +345,11 @@ class FollowViewsTests(TestCase):
         кто на него подписан и не появляется в ленте тех, кто не подписан."""
         Follow.objects.create(user=self.follower, author=self.following)
         response_follower = self.autorized_client_follower.get(reverse(
-            'posts:follow_index'
-        )
+            'posts:follow_index')
         )
         text_sub = response_follower.context['page_obj'][0].text
         self.assertEqual(text_sub, self.post.text)
         response_following = self.autorized_client_following.get(reverse(
-            'posts:follow_index'
-        )
+            'posts:follow_index')
         )
         self.assertNotContains(response_following, self.post.text)

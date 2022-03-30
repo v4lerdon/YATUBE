@@ -24,6 +24,19 @@ class PostPagesTests(TestCase):
             slug='test-slug',
         )
         cls.form = PostForm()
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.image = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовая запись',
@@ -43,22 +56,9 @@ class PostPagesTests(TestCase):
     def test_create_post(self):
         """Валидная форма создает запись в Post."""
         posts_count = Post.objects.count()
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
         form_data = {
             'text': 'Тестовая запись из формы',
-            'image': uploaded
+            'image': self.image
         }
         response = self.authorized_client.post(reverse(
             'posts:post_create',
@@ -108,7 +108,7 @@ class PostPagesTests(TestCase):
             data=form_data,
             follow=True
         )
-        edited_post = Post.objects.get(id=self.group.id)
+        edited_post = Post.objects.get(id=self.post.id)
         self.authorized_client.get(f'/posts/{edited_post.id}/edit/')
         form_data = {
             'text': 'Измененная тестовая запись из формы',
@@ -121,7 +121,7 @@ class PostPagesTests(TestCase):
             data=form_data,
             follow=True
         )
-        edited_post = Post.objects.get(id=self.group.id)
+        edited_post = Post.objects.get(id=self.post.id)
         self.assertEqual(
             edited_post.text,
             'Измененная тестовая запись из формы'
@@ -144,7 +144,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(Comment.objects.count(), comments_count + 1)
 
     def test_create_comment_guest(self):
-        """Гость не может написать комментарий"""
+        """Гость не может написать комментарий."""
         comments_count = Comment.objects.count()
         form_data = {
             'text': 'Тестовый комментарий гостя',
