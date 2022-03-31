@@ -110,9 +110,9 @@ class PostPagesTests(TestCase):
             data=form_data,
             follow=True
         )
-        edited_post = Post.objects.get(id=self.post.id)
+        self.post.refresh_from_db()
         self.assertEqual(
-            edited_post.text,
+            self.post.text,
             'Измененная тестовая запись из формы'
         )
 
