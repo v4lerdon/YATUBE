@@ -98,25 +98,14 @@ class PostPagesTests(TestCase):
 
     def test_update_post(self):
         """Валидная форма редактирует запись в Post."""
-        form_data = {
-            'text': 'Тестовая запись из формы2',
-            'group': self.group.id
-        }
-        self.authorized_client.post(reverse(
-            'posts:post_create'
-        ),
-            data=form_data,
-            follow=True
-        )
-        edited_post = Post.objects.get(id=self.post.id)
-        self.authorized_client.get(f'/posts/{edited_post.id}/edit/')
+        self.authorized_client.get(f'/posts/{self.post.id}/edit/')
         form_data = {
             'text': 'Измененная тестовая запись из формы',
             'group': self.group.id
         }
         self.authorized_client.post(reverse(
             'posts:post_edit',
-            kwargs={'post_id': edited_post.id}
+            kwargs={'post_id': self.post.id}
         ),
             data=form_data,
             follow=True
